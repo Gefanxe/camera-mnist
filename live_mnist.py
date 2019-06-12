@@ -83,39 +83,45 @@ labelz = dict(enumerate(["n0", "n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "
 
 for i in range(1000):
     ret, frame = cp.read(0)
+    
+    if ret == True:
 
-    final_img = img_to_mnist(frame)
-    image_shown = frame
-    _, contours, _ = cv2.findContours(final_img.copy(), cv2.RETR_EXTERNAL,
-                                      cv2.CHAIN_APPROX_SIMPLE)
+        final_img = img_to_mnist(frame)
+        image_shown = frame
+        _, contours, _ = cv2.findContours(final_img.copy(), cv2.RETR_EXTERNAL,
+                                        cv2.CHAIN_APPROX_SIMPLE)
 
-    rects = [cv2.boundingRect(contour) for contour in contours]
-    rects = [rect for rect in rects if rect[2] >= 3 and rect[3] >= 8]
+        rects = [cv2.boundingRect(contour) for contour in contours]
+        rects = [rect for rect in rects if rect[2] >= 3 and rect[3] >= 8]
 
-    #draw rectangles and predict:
-    for rect in rects:
+        #draw rectangles and predict:
+        for rect in rects:
 
-        x, y, w, h = rect
+            x, y, w, h = rect
 
-        if i >= 0:
+            if i >= 0:
 
-            mnist_frame = extract_digit(frame, rect, pad = 15)
+                mnist_frame = extract_digit(frame, rect, pad = 15)
 
-            if mnist_frame is not None: #and i % 25 == 0:
-                mnist_frame = np.expand_dims(mnist_frame, first_dim) #needed for keras
-                mnist_frame = np.expand_dims(mnist_frame, second_dim) #needed for keras
+                if mnist_frame is not None: #and i % 25 == 0:
+                    mnist_frame = np.expand_dims(mnist_frame, first_dim) #needed for keras
+                    mnist_frame = np.expand_dims(mnist_frame, second_dim) #needed for keras
 
-                class_prediction = model.predict_classes(mnist_frame, verbose = False)[0]
-                prediction = np.around(np.max(model.predict(mnist_frame, verbose = False)), 2)
-                label = str(prediction) # if you want probabilities
+                    class_prediction = model.predict_classes(mnist_frame, verbose = False)[0]
+                    prediction = np.around(np.max(model.predict(mnist_frame, verbose = False)), 2)
+                    label = str(prediction) # if you want probabilities
 
-                cv2.rectangle(image_shown, (x - 15, y - 15), (x + 15 + w, y + 15 + h),
-                              color = (255, 255, 0))
+                    cv2.rectangle(image_shown, (x - 15, y - 15), (x + 15 + w, y + 15 + h),
+                                color = (255, 255, 0))
 
-                label = labelz[class_prediction]
+                    label = labelz[class_prediction]
 
-                annotate(image_shown, label, location = (rect[0], rect[1]))
+                    annotate(image_shown, label, location = (rect[0], rect[1]))
 
-    cv2.imshow('frame', image_shown)
+        cv2.imshow('frame', image_shown)
+
+    else:
+        break
+
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
